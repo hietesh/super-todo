@@ -6,8 +6,6 @@ const Todos = () => {
 
     const [todos, setTodos] = useState([]);
 
-    const [filterTodos, setFilterTodos] = useState([]);
-
     const [searchText, setSearchText] = useState("");
 
     const [todo, setTodo] = useState("");
@@ -22,7 +20,7 @@ const Todos = () => {
             }
         ]
         setTodos(newTodos);
-        setFilterTodos(newTodos);
+        
         setTodo("");
         event.target.reset();
     }
@@ -33,7 +31,7 @@ const Todos = () => {
 
     const handleTodoCheck = (id, checked) => {
 
-        const newTodos = filterTodos.map(todo => {
+        const newTodos = todos.map(todo => {
             if (todo.id === id && todo.text.includes(searchText)) {
                 return { ...todo, complete: checked };
             }
@@ -41,13 +39,13 @@ const Todos = () => {
         });
 
         setTodos(newTodos);
-        setFilterTodos(newTodos);
+        
     }
 
     const handleTodoDelete = (id) => {
-        const newTodos = filterTodos.filter(item => item.id !== id && item.text.includes(searchText));
+        const newTodos = todos.filter(item => item.id !== id);
         setTodos(newTodos);
-        setFilterTodos(newTodos);
+        
     }
 
     const EmptyState = () => (
@@ -63,13 +61,13 @@ const Todos = () => {
 
     const handleSortTodos = () => {
         const sortTodos = [...todos];
-        filterTodos.sort(compareTodos);
+        sortTodos.sort(compareTodos);
         setTodos(sortTodos);
-        setFilterTodos(newTodos);
+        
     }
 
     const checkSorted = () => {
-        return todos.every((item, index, arr) => {
+        return filteredTodos.every((item, index, arr) => {
             return index === 0 || compareTodos(arr[index - 1], item) <= 0;
         })
     }
@@ -78,11 +76,11 @@ const Todos = () => {
         return todos.filter((item) => item.complete).length;
     }
 
-    const isTodoEmpty = () => todos.length === 0;
+    
 
     const updateCurrentTodo = (id, updateValue) => {
         const newTodo = todos.map(item => {
-            if (item.id === id && item.text.includes(searchText)) {
+            if (item.id === id) {
                 return {
                     ...item, text: updateValue
                 }
@@ -91,7 +89,7 @@ const Todos = () => {
         })
 
         setTodos(newTodo);
-        setFilterTodos(newTodos);
+        
     }
 
     const moveDown = (index) => {
@@ -100,7 +98,7 @@ const Todos = () => {
             [moveTodos[index], [moveTodos[index + 1]]] = [moveTodos[index + 1], [moveTodos[index]]]
         }
         setTodos(moveTodos);
-        setFilterTodos(newTodos);
+        
     }
 
     const moveUp = (index) => {
@@ -109,15 +107,17 @@ const Todos = () => {
             [moveTodos[index], [moveTodos[index - 1]]] = [moveTodos[index - 1], [moveTodos[index]]]
         }
         setTodos(moveTodos);
-        setFilterTodos(newTodos);
+        
     }
 
     const handleSearchTodo = (searchVal) => {
         setSearchText(searchVal);
-        const newTodos = filterTodos.filter(item => item.text.toLowerCase().includes(searchText));
-        setTodos(newTodos);
     }
 
+
+    const filteredTodos = todos.filter( item => item.text.toLowerCase().includes(searchText.trim()) );
+
+    const isTodoEmpty = () => filteredTodos.length === 0;
     return (
         <div className="max-w-2xl mx-auto p-10 lg:p-12 space-y-6">
             <h1 className="text-center font-display text-6xl font-bold text-accent">Super Todo</h1>
@@ -147,7 +147,6 @@ const Todos = () => {
 
             {/* Search Todo Items */}
             <SearchTodo handleSearchTodo={handleSearchTodo} searchText={searchText} />
-            
             <div className="flex justify-center gap-6">
                 {!checkSorted() && <button className="px-4 py-2 ring-2 ring-accent rounded-lg cursor-pointer hover:text-black hover:bg-accent flex gap-2 " onClick={e => handleSortTodos()}><ArrowUpDown /> Sort</button>}
                 {!isTodoEmpty() && <button className="px-4 py-2 ring-2 ring-red-400 rounded-lg cursor-pointer flex gap-2 hover:bg-red-400 hover:text-black" onClick={e => setTodos([])}> <Trash /> Delete All</button>}
@@ -158,10 +157,10 @@ const Todos = () => {
 
             {/* Show Todos */}
             {
-                todos.length > 0 ? (
+                filteredTodos.length > 0 ? (
                     <ul className="space-y-4">
                         {
-                            todos.map((item, index) => {
+                            filteredTodos.map((item, index) => {
                                 return (
                                     <li key={item.id}>
                                         <TodoItem
