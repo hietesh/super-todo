@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&display=swap');
+@import "tailwindcss";
+
+:root {
+    color:white;
+}
+
+body{
+    @apply bg-black;
+}
+
+@theme{
+    --font-fancy:"Old Standard TT",serif;
+    --font-body : "Roboto" . serif;
+    --font-display: "Exo 2" , serif;
+    --color-accent : var(--color-yellow-300);
+    --color-secondary: var(--color-gray-400);
+    --color-accent-hover: var(--color-yellow-200);
+}
