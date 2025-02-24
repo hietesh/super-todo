@@ -1,12 +1,17 @@
 import { ArrowUpDown, Check, ChevronDown, ChevronUp, Edit, Plus, Rabbit, Trash, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import SearchTodo from "./SearchTodo";
+import TodoDropdown from "./TodoDropdown";
 
 const Todos = () => {
 
     const [todos, setTodos] = useState([]);
 
     const [searchText, setSearchText] = useState("");
+
+    const [dropdownText, setDropdownText] = useState("");
+
+    const [labelFilter,setLabelFilter] = useState('general');
 
     const [todo, setTodo] = useState("");
 
@@ -16,7 +21,8 @@ const Todos = () => {
             ...todos, {
                 id: crypto.randomUUID(),
                 text: todo,
-                complete: false
+                complete: false,
+                label:labelFilter
             }
         ]
         setTodos(newTodos);
@@ -40,6 +46,14 @@ const Todos = () => {
 
         setTodos(newTodos);
         
+    }
+
+    const handleDropdownFilter = (value) => {
+        setDropdownText(value);
+    }
+
+    const handleLabelFilter = (value) => {
+        setLabelFilter(value);
     }
 
     const handleTodoDelete = (id) => {
@@ -114,11 +128,58 @@ const Todos = () => {
         setSearchText(searchVal);
     }
 
+    const getFilterCriteria = (item)=>{ 
+        switch (dropdownText) {
+            case 'completed':
+                return item.complete;
+            case 'incomplete':
+                return !item.complete;
+            case 'all':
+            default:
+                return true;
+        }    
+    } 
 
-    const filteredTodos = todos.filter( item => item.text.toLowerCase().includes(searchText.trim()) );
+
+    const filteredTodos = todos.filter( 
+        item => {
+            return item.text.toLowerCase().includes(searchText.toLowerCase().trim()) && getFilterCriteria(item);              
+        }
+    );
 
     const isTodoEmpty = () => filteredTodos.length === 0;
-    return (
+
+    const dropdownFilters = [
+        {
+            text : 'All',
+            value : 'all'
+        },
+        {
+            text : 'Incomplete',
+            value : 'incomplete',
+        },
+        {
+            text : 'Completed',
+            value : 'completed', 
+        }
+    ];
+
+    const labelFilters = [
+        {
+            text: '🟩 Important',
+            value:'important'
+        },
+        {
+            text: '🟥 Priority',
+            value:'priority'
+        },
+        {
+            text: '🟨 General',
+            value:'general'
+        }
+    ]
+
+        return (
         <div className="max-w-2xl mx-auto p-10 lg:p-12 space-y-6">
             <h1 className="text-center font-display text-6xl font-bold text-accent">Super Todo</h1>
             <p className="text-lg font-light text-secondary text-center italic">Manage your Todo's with Ease</p>
@@ -135,6 +196,12 @@ const Todos = () => {
                     placeholder="Add a Todo"
                     className="flex-1 font-body focus:outline-none"
                 />
+                <TodoDropdown 
+                    todoFilter={labelFilters}
+                    handleDropdownFilter={handleLabelFilter}
+                    dropdownText={labelFilter}
+                    className="border-1 border-accent"
+                />
                 <button
                     type="submit"
                     value="Add Todo"
@@ -146,38 +213,101 @@ const Todos = () => {
             </form>
 
             {/* Search Todo Items */}
-            <SearchTodo handleSearchTodo={handleSearchTodo} searchText={searchText} />
+            <div className="flex items-center gap-3">
+                <SearchTodo className="flex-1" handleSearchTodo={handleSearchTodo} searchText={searchText} />
+                <TodoDropdown 
+                    todoFilter={dropdownFilters} 
+                    handleDropdownFilter={handleDropdownFilter}
+                    dropdownText={dropdownText}
+                />
+                
+            </div>
+                      
             <div className="flex justify-center gap-6">
                 {!checkSorted() && <button className="px-4 py-2 ring-2 ring-accent rounded-lg cursor-pointer hover:text-black hover:bg-accent flex gap-2 " onClick={e => handleSortTodos()}><ArrowUpDown /> Sort</button>}
                 {!isTodoEmpty() && <button className="px-4 py-2 ring-2 ring-red-400 rounded-lg cursor-pointer flex gap-2 hover:bg-red-400 hover:text-black" onClick={e => setTodos([])}> <Trash /> Delete All</button>}
             </div>
 
             {!isTodoEmpty() && <p className="text-secondary text-right">{completedTodos()} / {todos.length} Completed</p>}
-
-
-            {/* Show Todos */}
+            
             {
+        
                 filteredTodos.length > 0 ? (
+                    <>
+                        <ul className="space-y-4">
+                            {
+                                filteredTodos.map((item, index) => {
+                                    return (
+                                        <li key={item.id}>
+                                            <TodoItem
+                                                item={item}
+                                                index={index}
+                                                handleTodoCheck={handleTodoCheck}
+                                                handleTodoDelete={handleTodoDelete}
+                                                updateCurrentTodo={updateCurrentTodo}
+                                                moveDown={moveDown}
+                                                moveUp={moveUp}
+                                                length={todos.length - 1}
+                                            />
+                                        </li>
+                                    )
+                                })
+                            }
+                        </ul>
+
+                    <p>Completed Task</p>
+                    
                     <ul className="space-y-4">
                         {
                             filteredTodos.map((item, index) => {
                                 return (
-                                    <li key={item.id}>
-                                        <TodoItem
-                                            item={item}
-                                            index={index}
-                                            handleTodoCheck={handleTodoCheck}
-                                            handleTodoDelete={handleTodoDelete}
-                                            updateCurrentTodo={updateCurrentTodo}
-                                            moveDown={moveDown}
-                                            moveUp={moveUp}
-                                            length={todos.length - 1}
-                                        />
-                                    </li>
+                                    item.complete ? (
+                                        <li key={item.id}>
+                                            <TodoItem
+                                                item={item}
+                                                index={index}
+                                                handleTodoCheck={handleTodoCheck}
+                                                handleTodoDelete={handleTodoDelete}
+                                                updateCurrentTodo={updateCurrentTodo}
+                                                moveDown={moveDown}
+                                                moveUp={moveUp}
+                                                length={todos.length - 1}
+                                            />
+                                        </li> 
+                                    ) : ''
                                 )
                             })
                         }
                     </ul>
+
+                    <p>InComplete Task</p>
+                    
+                    <ul className="space-y-4">
+                        {
+                            filteredTodos.map((item, index) => {
+                                return (
+                                   
+                                    !item.complete ? (
+                                        <li key={item.id}>
+                                            <TodoItem
+                                                item={item}
+                                                index={index}
+                                                handleTodoCheck={handleTodoCheck}
+                                                handleTodoDelete={handleTodoDelete}
+                                                updateCurrentTodo={updateCurrentTodo}
+                                                moveDown={moveDown}
+                                                moveUp={moveUp}
+                                                length={todos.length - 1}
+                                            />
+                                        </li> 
+                                    ) : ''
+                                    
+                                )
+                            })
+                        }
+                    </ul>
+                            
+                    </>
 
                 ) : <EmptyState />
             }
@@ -195,7 +325,20 @@ const TodoItem = ({ item, handleTodoCheck, handleTodoDelete, updateCurrentTodo, 
 
     const Item = () => {
         return (
-            <div className="flex p-3 rounded-lg justify-between items-center gap-3 hover:bg-gray-900">
+            <div className={`
+                flex 
+                p-3 
+                rounded-lg 
+                justify-between 
+                items-center 
+                gap-3 
+                hover:opacity-80 
+                ${ 
+                    item.label == 'general' ? 'bg-yellow-400' : item.label == 'priority' ? 'bg-red-400' 
+                    : 'bg-green-400'
+                }
+                `}
+            >
                 <div className="flex flex-col gap-2 text-secondary">
                     <button
                         className="hover:bg-gray-700 rounded-md p-1 cursor-pointer disabled:opacity-50"
